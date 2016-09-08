@@ -1,0 +1,4 @@
+Under this file, I will include:
+(1) code for linear models, mainly for various matrix factorizations
+(2) code for generalized models, i.e., gradient descent and Newton's method
+(3) methematical derivation/proof requried in the exercise

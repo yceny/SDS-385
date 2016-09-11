@@ -16,11 +16,6 @@ y = rbinom(n,1,pr)
 fit_glm = glm(y ~ x1 + x2 + x3 + x4 +x5, family = binomial(link = 'logit'))
 summary(fit_glm)
 
-## Start with real data
-X = as.matrix(wdbc[,8:12])
-y = wdbc$y
-n = dim(X)[1]
-p = dim(X)[2]
 
 # calculate log likelihood function
 L <- function(X,y,beta) {
@@ -49,7 +44,8 @@ X = cbind(1,x1,x2,x3,x4,x5)
 p = p + 1
 y = as.matrix(y, ncol = 1)
 
-GD = function(X,y, alpha = 0.01, num.iterations = 5000, threshold = 1e-4){
+# step size is set at default at 0.01, number of iterations at 5000, and threshold at 1e-5
+GD = function(X,y, alpha = 0.01, num.iterations = 5000, threshold = 1e-5){
   
   
   # initialize the parameters
@@ -66,12 +62,6 @@ GD = function(X,y, alpha = 0.01, num.iterations = 5000, threshold = 1e-4){
       beta.path1[i,] = t(beta)
     }
     if (i >= 2){
-      #beta.old = as.matrix(beta.path1[i-1,], ncol = 1)
-      #LossDecrease = L(X,y,beta) - L(X,y,beta.old)
-      #LD = c(LD, LossDecrease)
-      #if (abs(LossDecrease) < threshold){
-      #  break
-      #}
       if (all(abs(t(beta) - beta.path1[i-1,]) < threshold)){
         break
       }
@@ -102,61 +92,12 @@ Newton = function(X, y, num.iterations = 500, threshold = 1e-5){
       beta.path2 = rbind(beta.path2,beta)
     }
     if (i >= 2){
-      #beta.old = as.matrix(beta.path1[i-1,], ncol = 1)
-      #LossDecrease = L(X,y,beta) - L(X,y,beta.old)
-      #LD = c(LD, LossDecrease)
-      #if (abs(LossDecrease) < threshold){
-      #  break
-      #}
-      # check convergence fun norm_vector grad() (Jennifer)
       if (all(abs(t(beta) - beta.path1[i-1,]) < threshold)){
         break
       }
     }
   }
   return (beta.path2)
-}
-
-## Quasi Newton using BFGS
-qNewton = function(X,y,alpha = 0.01, num.iterations = 5000, threshold = 1e-4){
-    # initialize the parameters
-    beta = matrix(rep(0,p,ncol = 1))
-    B = diag(p)
-    
-    # update parameters iteratively
-    beta.path1_qn = matrix(,nrow = num.iterations,ncol = p)
-    beta.old = beta
-    for (i in 1:num.iterations){
-        
-        # update inverse of approximate Hessian using BFGS
-        if (i >= 2){
-            scalar = 1 / (t(yy) %*% s)
-            coef1 = diag(p) - scalar[1,1] * (s %*% t(yy))
-            coef2 = diag(p) - scalar[1,1] * (yy %*% t(s))
-            coef3 = s %*% t(s) 
-            B = coef1 %*% B %*% coef2 + coef3
-        }
-        
-        
-        # update estimates based on step length (alpha) and direction (approx inverse Hessian)
-        beta.new = beta.old - alpha * (B %*% grad(X,y,beta.old))
-        
-        if (all(is.na(beta.new))){
-            break
-        } else {
-            beta.path1_qn[i,] = t(beta.new)
-            yy = grad(X,y,beta.new) - grad(X,y, beta.old)
-            s = beta.new - beta.old
-            beta.old = beta.new
-        }
-        if (i >= 2){
-            if (all(abs(beta.new - beta.path1_qn[i-1,]) < threshold)){
-                break
-            }
-        }
-        
-    }
-    return (beta.path1_qn)
 }
 
 

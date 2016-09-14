@@ -2,7 +2,6 @@
 # generate data
 set.seed(128)
 n = 1000
-p = 5
 x1 = rnorm(n)
 x2 = rnorm(n)
 x3 = rnorm(n)
@@ -34,14 +33,15 @@ grad <- function(X,y,beta){
 hess <- function(X,y,beta){
   m = matrix(rep(1,n),ncol = 1)
   W = (1/(1+exp(-X %*% beta))) %*% t(m - 1/(1+exp(-X %*% beta)))
-  hess = t(X) %*% W %*% X
+  diag_W = Diagonal(n,diag(W))
+  hess = t(X) %*% diag_W %*% X
   return(hess)
 }
 
 
 ## Gradient descent algorithm
 X = cbind(1,x1,x2,x3,x4,x5)
-p = p + 1
+p = 6
 y = as.matrix(y, ncol = 1)
 
 # step size is set at default at 0.01, number of iterations at 5000, and threshold at 1e-5
@@ -84,8 +84,9 @@ Newton = function(X, y, num.iterations = 500, threshold = 1e-5){
   LD = vector()
   for (i in 1:num.iterations){
     A = hess(X,y,beta)
-    invA = solve(A) # what if it is singular? way to update inverse hessian under newton's method?
-    beta = beta - invA %*% grad(X,y,beta) # update, and the inverse of the hessian matrix could be a problem
+    g = grad(X,y,beta)
+    direction = solve(A,g) 
+    beta = beta - direction # update, and the inverse of the hessian matrix could be a problem
     if (all(is.na(beta))){
       break
     } else {

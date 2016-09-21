@@ -1,0 +1,6 @@
+I include R codes for variants Gradient Descent algorithm:
+1. Using backtrack line search
+2. Using Qausi-Newton with BFGS updates
+3. Using Qausi-Newton with BFGS updates and backtrack line search
+
+I also compare GD and its variants in the write-up

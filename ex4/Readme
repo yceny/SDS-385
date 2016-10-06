@@ -1,3 +1,7 @@
 In this exercise, I include line search variant and AdaGrad algorithm.
 I also include a write up for performance of the two algorithms with respect to parameters of interest.
-Still have a hard time dealing with real big data....
+
+For SGD on big data, I include the main function written in C++, and a R script to run C++ code in R.
+I also summarize the two main tricks used in SGD when working on sparse big data: 
+(1) regularization term
+(2) lazy update

@@ -1,0 +1,3 @@
+I include a writeup, R code and csv file that contains estimated coefficients for the algorithm
+
+I implement two versions of ADMM, one with constant rho (admm function), the other with changing rho (Ad_admm function)

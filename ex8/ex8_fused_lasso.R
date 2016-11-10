@@ -48,19 +48,22 @@ admm <- function(y, D, rho = 0.01, gamma = 0.01, num.iteration = 1000, ABSTOL = 
     
     # initialize matrix to hold data
     beta.path = matrix(0, nrow = num.iteration,ncol = p)
-    # z.path = matrix(0, nrow = num.iteration, ncol = n)
+    z.path = matrix(0, nrow = num.iteration, ncol = n)
     u.path = matrix(0, nrow = num.iteration, ncol = n)
     
     # create empty vector to stor objective value
     objective = c()
     
     # when rho is constant, we cache matrix inverse used in the first step
-    inv_cache = solve(diag(p) + rho * crossprod(D))
+    L = rho * crossprod(D)
+    diag(L) = diag(L) + 1
+    # inv_cache = solve(L)
     
     for (i in 1:num.iteration){
         # step 1
         # beta = inv_cache %*% (y + rho * (t(D) %*% z) - t(D) %*% lambda)
-        beta = inv_cache %*% (y - rho * t(D) %*% (z - u) )
+        # beta = inv_cache %*% (y - rho * t(D) %*% (z - u) )
+        beta = Matrix::solve(L, (y - rho * t(D) %*% (z - u)))
         
         
         # step 2
@@ -72,13 +75,13 @@ admm <- function(y, D, rho = 0.01, gamma = 0.01, num.iteration = 1000, ABSTOL = 
         u = u + D %*% beta - z
         
         beta.path[i,] = as.vector(beta)
-        # z.path[i,] = as.vector(z)
+        z.path[i,] = as.vector(z)
         u.path[i,] = as.vector(u)
         objective = c(objective, obj(y, beta, gamma, D))
         
         if (i >= 2){
-            # dual.res = - rho * (z.path[i,] - z.path[(i-1),])
-            dual.res = - rho * t(D) %*% (u.path[i,] - u.path[(i - 1), ])
+            dual.res = - rho * (z.path[i,] - z.path[(i-1),])
+            # dual.res = - rho * t(D) %*% (u.path[i,] - u.path[(i - 1), ])
             prime.res = D %*% beta - z
             dual.tol = sqrt(n) * ABSTOL + RELTOL * sqrt(sum((rho * t(D) %*% u) ^ 2))
             prime.tol = sqrt(p) * ABSTOL + RELTOL * max(sqrt(sum((D %*% beta) ^ 2)), sqrt(sum(z ^ 2)))
@@ -175,13 +178,15 @@ fit_admm = admm(y, D)
 fit_fast.admm = fast_admm(y,D)
 
 admmMatrix = matrix(fit_admm$beta, nrow = nrow(fmri))
+admmMatrix[fmri == 0] = 0
 fast_admmMatrix = matrix(fit_fast.admm$beta, nrow = nrow(fmri))
+fast_admmMatrix[fmri == 0] = 0
 
 # plot results
-par(mfrow = c(1, 3))
-image(fmri, main = "Raw")
-image(admmMatrix, main = "ordinary ADMM")
-image(fast_admmMatrix, main = "efficient ADMM")
+par(mfrow = c(1, 4))
+image(Matrix(fmri),  main = "Raw")
+image(Matrix(admmMatrix),  main = "ordinary ADMM")
+image(Matrix(fast_admmMatrix),  main = "efficient ADMM")
 
 # plot convergence
 par(mfrow = c(2,1))

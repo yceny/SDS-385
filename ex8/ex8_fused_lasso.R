@@ -110,18 +110,22 @@ fast_admm <- function(y, D, rho = 0.01, gamma = 0.1, num.iteration = 1000, ABSTO
     # initialize matrix to hold data
     beta.path = matrix(0, nrow = num.iteration,ncol = p)
     # z.path = matrix(0, nrow = num.iteration, ncol = n)
-    t.path = matrix(0, nrow = num.iteration, ncol = n)
+    r.path = matrix(0, nrow = num.iteration, ncol = p)
+    s.path = matrix(0, nrow = num.iteration, ncol = n)
     
     # create empty vector to stor objective value
     objective = c()
     
     # when rho is constant, we cache matrix inverse used in the first step
-    inv_cache = solve((1 + rho) * diag(p))
-    inv_cache1 = solve(diag(p) + crossprod(D))
+    # inv_cache = solve((1 + rho) * diag(p))
+    L = crossprod(D)
+    diag(L) = diag(L) + 1
+    inv_cache1 = solve(L)
     
     for (i in 1:num.iteration){
         # step 1
-        beta = inv_cache %*% (y + rho * r)
+        # beta = inv_cache %*% (y + rho * r)
+        beta = (y + rho * r - rho * u)/(rho + 1)
         
         # step 2
         z = prox(s - t, gamma / rho) # shall we divide t by rho
@@ -138,15 +142,20 @@ fast_admm <- function(y, D, rho = 0.01, gamma = 0.1, num.iteration = 1000, ABSTO
         
         beta.path[i,] = as.vector(beta)
         # z.path[i,] = as.vector(z)
-        t.path[i,] = as.vector(t)
+        r.path[i,] = as.vector(r)
+        s.path[i,] = as.vector(s)
         objective = c(objective, obj(y, beta, gamma, D))
         
         if (i >= 2){
             # dual.res = - rho * (z.path[i,] - z.path[(i-1),])
-            dual.res = - rho * t(D) %*% (t.path[i,] - t.path[(i - 1), ])
-            prime.res = D %*% beta - z
-            dual.tol = sqrt(n) * ABSTOL + RELTOL * sqrt(sum((rho * t(D) %*% t) ^ 2))
-            prime.tol = sqrt(p) * ABSTOL + RELTOL * max(sqrt(sum((D %*% beta) ^ 2)), sqrt(sum(z ^ 2)))
+            dual.res = c(r.path[i,] - r.path[i-1,], s.path[i,] - s.path[i-1,])
+            dual.res = - rho * dual.res
+            prime.res = c(as.matrix(beta) - as.matrix(r), as.matrix(z) - as.matrix(s))
+            a0 = c(as.matrix(u),as.matrix(t))
+            dual.tol = sqrt(n + p) * ABSTOL + RELTOL * sqrt(sum( a0 ^ 2))
+            a1 = c(as.matrix(beta),as.matrix(z))
+            a2 = c(as.matrix(r),as.matrix(s))
+            prime.tol = sqrt(p + n) * ABSTOL + RELTOL * max(sqrt(sum(a1 ^ 2)), sqrt(sum(a2^2)))
             if (sqrt(sum(dual.res ^ 2)) < dual.tol & sqrt(sum(prime.res ^ 2)) < prime.tol){
                 break
             }

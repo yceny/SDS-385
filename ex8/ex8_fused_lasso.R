@@ -123,7 +123,7 @@ fast_admm <- function(y, D, rho = 0.01, gamma = 0.1, num.iteration = 1000, ABSTO
     # inv_cache = solve((1 + rho) * diag(p))
     L = crossprod(D)
     diag(L) = diag(L) + 1
-    inv_cache1 = solve(L)
+    # inv_cache1 = solve(L)
     
     for (i in 1:num.iteration){
         # step 1
@@ -136,7 +136,8 @@ fast_admm <- function(y, D, rho = 0.01, gamma = 0.1, num.iteration = 1000, ABSTO
         # step 3
         w = beta + u
         v = z + t
-        r = inv_cache1 %*% (w + t(D) %*% v)
+        # r = inv_cache1 %*% (w + t(D) %*% v)
+        r = Matrix::solve(L, (w + t(D) %*% v))
         s = D %*% r
         
         # step 4
@@ -183,10 +184,10 @@ fast_admmMatrix = matrix(fit_fast.admm$beta, nrow = nrow(fmri))
 fast_admmMatrix[fmri == 0] = 0
 
 # plot results
-par(mfrow = c(1, 4))
-image(Matrix(fmri),  main = "Raw")
-image(Matrix(admmMatrix),  main = "ordinary ADMM")
-image(Matrix(fast_admmMatrix),  main = "efficient ADMM")
+par(mfrow = c(1, 3))
+image(Matrix(fmri), useRaster = TRUE, main = "Raw")
+image(Matrix(admmMatrix), useRaster = TRUE, main = "ordinary ADMM")
+image(Matrix(fast_admmMatrix), useRaster = TRUE, main = "efficient ADMM")
 
 # plot convergence
 par(mfrow = c(2,1))

@@ -41,6 +41,7 @@ r1_apprx <- function(X, c1, c2, num.iteration = 1000, tol = 1e-6){
     
     # Step 1: initialize v to have l2 norm 1, using the first right singular vector of X
     # v = svd(X)$v[,1]
+    # could use a random vector as the initialization
     v <- rep(1, p)
     v <- v / l2.norm(v)
 
@@ -55,8 +56,6 @@ r1_apprx <- function(X, c1, c2, num.iteration = 1000, tol = 1e-6){
     v.path = matrix(0, nrow = num.iteration, ncol = p)
     
     # start loop
-    # 1. stopping criteria???
-    # 2. how to do binary search???
     for (i in 1:num.iteration){
         # update u, given v
         a = X %*% v
@@ -92,6 +91,8 @@ r1_apprx <- function(X, c1, c2, num.iteration = 1000, tol = 1e-6){
 A = runif(100)
 B = runif(100)
 X = A %o% B
+# c should be between 0 and 1
+# imit of u is c1, and the largest possible is sqrt(n)
 c <- 0.5
 c1 <- c*sqrt(n)
 c2 <- c*sqrt(p)
@@ -119,7 +120,7 @@ rk_apprx <- function(X, k, c1, c2, max_iteration = 10000, tol = 1e-6){
 	return(result)
 }
 
-# Create a random matrix with rank 1
+# Create a random matrix with rank k
 k = 3
 X = matrix(0, nrow = 100, ncol = 100)
 for (i in 1:k) {
@@ -146,6 +147,9 @@ socialMarketing <- function(k, c1, c2){
 	return(result)	
 }
 
+# interpretation of the penalty parameter c1 and c2 ?
+# u is a row vector, associated with person
+# v is a column vector, associated with topic
 sm_result5 = socialMarketing(1, c1 = 5, c2 = 5)
 sm_result3 = socialMarketing(1, c1 = 3, c2 = 3)
 sm_result1.5 = socialMarketing(1, c1 = 1.5, c2 = 1.5)
